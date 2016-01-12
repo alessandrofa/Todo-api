@@ -35,10 +35,24 @@ app.post('/todos', function (req, res) {
 		return res.status(400).send();	
 	}
 	
+
+	body.description = body.description.trim();
 	body.id = todoNextId++;
 	todos.push(body);
 	
 	res.json(body);
+});
+
+app.delete('/todos/:id', function (req, res) {
+	var todoId = parseInt(req.params.id, 10);
+	var matchedTodo = _.findWhere(todos, { id: todoId });
+	
+	if (matchedTodo) {
+		todos = _.without(todos, matchedTodo);
+		res.json(matchedTodo);
+	}
+	else
+		res.status(404).json({ "error": "No todo item found with the id = '" + todoId.toString() + "'" });	
 });
 
 app.listen(PORT, function (){
