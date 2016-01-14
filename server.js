@@ -43,6 +43,41 @@ app.post('/todos', function (req, res) {
 	res.json(body);
 });
 
+app.put('/todos/:id', function (req, res) {
+	
+	if (!_.isObject(req.body)) {
+		return res.status(400).json({ "error": "No object has passed!" });
+	}
+
+	var body = _.pick(req.body, 'description', 'completed');
+
+	if (_.isUndefined(body.completed) && _.isUndefined(body.description)) {
+		return res.status(400).json({ "error": "The object passed does not have one of the following properties: description as string, completed as boolean" });
+	}
+
+	if (!_.isUndefined(body.completed) && !_.isBoolean(body.completed)) {
+		return res.status(400).json({ "error": "The property completed is not a boolean" });
+	}
+
+	if (!_.isUndefined(body.description) && !_.isString(body.description)) {
+		return res.status(400).json({ "error": "The property description is not a string" });
+	}
+
+	if (!_.isUndefined(body.description) && body.description.trim().length === 0) {
+		return res.status(400).json({ "error": "The property description cannot be empty" });
+	}
+
+	var todoId = parseInt(req.params.id, 10);
+	var matchedTodo = _.findWhere(todos, { id: todoId });
+
+	if (matchedTodo) {		 
+		_.extend(matchedTodo, body);
+		res.json(matchedTodo);
+	}
+	else
+		res.status(404).json({ "error": "No todo item found with the id = '" + todoId.toString() + "'" });
+});
+
 app.delete('/todos/:id', function (req, res) {
 	var todoId = parseInt(req.params.id, 10);
 	var matchedTodo = _.findWhere(todos, { id: todoId });
