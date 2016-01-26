@@ -16,37 +16,49 @@ app.get('/', function(req, res) {
 
 app.get('/todos', function(req, res) {
 	var queryParams = req.query;
-	var filteredTodos = todos;
+	var whereDef = {};
 
 	if (queryParams.hasOwnProperty('completed')) {
-		filteredTodos = _.where(filteredTodos, {
-			completed: (queryParams.completed === 'true')
-		});
+		whereDef.completed = (queryParams.completed === 'true');
 	}
 
-	if (queryParams.hasOwnProperty('q') && queryParams.q.length > 0) {
-		filteredTodos = _.filter(filteredTodos, function(todo) {
-			return todo.description.toLowerCase().indexOf(queryParams.q.toLowerCase()) > -1;
-		});
+	if (queryParams.hasOwnProperty('q') && queryParams.q.length > 0) {		
+		whereDef.description = {
+	        $like: '%' + queryParams.q + '%'
+	      };
 	}
 
-	res.json(filteredTodos);
+	db.todo.findAll({ where: whereDef })
+	.then(function (todos) {
+
+		if (!todos || todos.length === 0) {
+			res.status(404).json( { alert: 'Not found!' } );
+		}
+		else {
+			res.json(todos);
+		}
+	})
+	.catch (function (e) {
+		res.status(500).json(e);
+	});
 });
 
 app.get('/todos/:id', function(req, res) {
 	var todoId = parseInt(req.params.id, 10);
-	var matchedTodo = _.findWhere(todos, {
-		id: todoId
-	});
 
-	if (matchedTodo)
-		res.json(matchedTodo);
-	else
-		res.status(404).send();
+	db.todo.findById(todoId).then(function (todo) {
+			if (todo) {
+				res.json(todo);
+			}
+			else 
+				res.status(404).json({ alert: 'Todo id = ' + todoId + ' was not found!' });
+		}
+	).catch(function (e) {
+		res.status(400).json(e);
+	});	
 });
 
-app.post('/todos', function(req, res) {
-	
+app.post('/todos', function(req, res) {	
 	var body = _.pick(req.body, 'description', 'completed');
 
 	db.todo.create(body).then(function (todo) {
@@ -54,24 +66,7 @@ app.post('/todos', function(req, res) {
 	})
 	.catch(function (e) {
 		res.status(400).json(e);
-	})
-	;
-
-
-/*
-	if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0) {
-		return res.status(400).send();
-	}
-
-
-
-
-	body.description = body.description.trim();
-	body.id = todoNextId++;
-	todos.push(body);
-
-	res.json(body);
-	*/
+	});
 });
 
 app.put('/todos/:id', function(req, res) {
