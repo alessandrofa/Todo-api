@@ -12,7 +12,10 @@ app.use(bodyParser.json());
 
 app.get('/', function(req, res) {
 	res.send('Todo Api Root');
-});
+}
+);
+
+
 
 app.get('/todos', function(req, res) {
 	var queryParams = req.query;
@@ -41,7 +44,8 @@ app.get('/todos', function(req, res) {
 	.catch (function (e) {
 		res.status(500).json(e);
 	});
-});
+}
+);
 
 app.get('/todos/:id', function(req, res) {
 	var todoId = parseInt(req.params.id, 10);
@@ -56,7 +60,8 @@ app.get('/todos/:id', function(req, res) {
 	).catch(function (e) {
 		res.status(400).json(e);
 	});	
-});
+}
+);
 
 app.post('/todos', function(req, res) {	
 	var body = _.pick(req.body, 'description', 'completed');
@@ -67,7 +72,8 @@ app.post('/todos', function(req, res) {
 	.catch(function (e) {
 		res.status(400).json(e);
 	});
-});
+}
+);
 
 app.put('/todos/:id', function(req, res) {
 
@@ -103,34 +109,59 @@ app.put('/todos/:id', function(req, res) {
 		});
 	}
 
-	var todoId = parseInt(req.params.id, 10);
-	var matchedTodo = _.findWhere(todos, {
-		id: todoId
-	});
 
-	if (matchedTodo) {
-		_.extend(matchedTodo, body);
-		res.json(matchedTodo);
-	} else
-		res.status(404).json({
-			"error": "No todo item found with the id = '" + todoId.toString() + "'"
-		});
-});
+	var todoId = parseInt(req.params.id, 10);
+	db.todo.update(body, { where: { id: todoId } }).then(function () {
+		res.json({ info: 'Element ' + todoId + ' was updated!'});
+	})
+	.catch(function (e) {
+		res.status(400).json(e);
+	});    
+}
+);
 
 app.delete('/todos/:id', function(req, res) {
 	var todoId = parseInt(req.params.id, 10);
-	var matchedTodo = _.findWhere(todos, {
-		id: todoId
+	
+	db.todo.destroy({ where: { id: todoId } }).then(function () {
+		res.json({ info: 'Element ' + todoId + ' was deleted!'});
+	})
+	.catch(function (e) {
+		res.status(400).json(e);
 	});
+}
+);
 
-	if (matchedTodo) {
-		todos = _.without(todos, matchedTodo);
-		res.json(matchedTodo);
-	} else
-		res.status(404).json({
-			"error": "No todo item found with the id = '" + todoId.toString() + "'"
-		});
-});
+app.post('/users', function (req, res) {
+	var body = _.pick(req.body, 'email', 'password');
+
+    if (typeof body.email !== 'string' || typeof body.password != 'string') {
+        return res.status(400).send('The informations email and password need be informed!');
+    }    
+
+	db.user.create(body).then(function (user) {
+		res.json(user.toPublicJSON());
+	})
+	.catch(function (e) {
+		res.status(400).json(e);
+	});
+}
+);
+
+app.post('/users/login', function (req, res) {
+	var body = _.pick(req.body, 'email', 'password');
+
+    if (typeof body.email !== 'string' || typeof body.password != 'string') {
+        return res.status(400).send('The informations email and password need be informed!');   
+    } 
+
+    db.user.authenticate(body).then(function (user) {
+        res.header('Auth', user.generateToken('authentication')).json(user.toPublicJSON());
+    }, function (msg) {
+        res.status(401).json( { alert: msg } );
+    });            
+}
+);
 
 
 db.sequelize.sync({force: false}).then(function() {
@@ -139,5 +170,6 @@ db.sequelize.sync({force: false}).then(function() {
 		console.log('Express listening on port ' + PORT + '!');
 	});
 	
-});
+}
+);
 
