@@ -13,9 +13,8 @@ app.use(bodyParser.json());
 
 app.get('/', function(req, res) {
 	res.send('Todo Api Root');
-}
+  }
 );
-
 
 
 app.get('/todos', middleware.requireAuthentication, function(req, res) {
@@ -45,7 +44,7 @@ app.get('/todos', middleware.requireAuthentication, function(req, res) {
 	.catch (function (e) {
 		res.status(500).json(e);
 	});
-}
+  }
 );
 
 app.get('/todos/:id', middleware.requireAuthentication, function(req, res) {
@@ -62,7 +61,7 @@ app.get('/todos/:id', middleware.requireAuthentication, function(req, res) {
 	).catch(function (e) {
 		res.status(400).json(e);
 	});	
-}
+  }
 );
 
 app.post('/todos', middleware.requireAuthentication, function(req, res) {	
@@ -78,7 +77,7 @@ app.post('/todos', middleware.requireAuthentication, function(req, res) {
 	, function (e) {
 		res.status(400).json(e);
 	});
-}
+  }
 );
 
 app.put('/todos/:id', middleware.requireAuthentication, function(req, res) {
@@ -134,9 +133,8 @@ app.put('/todos/:id', middleware.requireAuthentication, function(req, res) {
         } 
                 
     });
-    
-	   
-}
+ 	   
+  }
 );
 
 app.delete('/todos/:id', middleware.requireAuthentication, function(req, res) {
@@ -158,7 +156,7 @@ app.delete('/todos/:id', middleware.requireAuthentication, function(req, res) {
         } 
                 
     });	
-}
+  }
 );
 
 app.post('/users', function (req, res) {
@@ -174,7 +172,7 @@ app.post('/users', function (req, res) {
 	.catch(function (e) {
 		res.status(400).json(e);
 	});
-}
+  }
 );
 
 app.post('/users/login', function (req, res) {
@@ -195,16 +193,16 @@ app.post('/users/login', function (req, res) {
     }, function (msg) {
         res.status(401).json( { alert: msg } );
     });            
-}
+  }
 );
 
 
-db.sequelize.sync({force: false}).then(function() {
+db.sequelize.sync({force: true}).then(function() {
 
 	app.listen(PORT, function() {
 		console.log('Express listening on port ' + PORT + '!');
 	});
 	
-}
+  }
 );
 
