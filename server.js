@@ -177,25 +177,43 @@ app.post('/users', function (req, res) {
 
 app.post('/users/login', function (req, res) {
 	var body = _.pick(req.body, 'email', 'password');
+    var userInstance;
 
     if (typeof body.email !== 'string' || typeof body.password != 'string') {
         return res.status(400).send('The informations email and password need be informed!');   
     } 
 
     db.user.authenticate(body).then(function (user) {
-        var token = user.generateToken('authentication');
-        if (token) {
-            res.header('Auth', token).json(user.toPublicJSON());
-        }
-        else {
+        userInstance = user;
+        var token = userInstance.generateToken('authentication');
+        
+        if (!token){
              res.status(401).send();
         }
-    }, function (msg) {
+        else 
+        {        
+            return db.token.create({
+                token: token 
+            });
+        }        
+    }).then (function (tokenInstance) {
+        res.header('Auth', tokenInstance.token).json(userInstance.toPublicJSON());
+    }).catch(function (msg) {
         res.status(401).json( { alert: msg } );
-    });            
+    });   
+    
+             
   }
 );
 
+app.delete('/users/login', middleware.requireAuthentication, function (req, res) {
+    req.tokenInstance.destroy().then(function() {
+        res.status(204).send();
+      }
+    ).catch(function (e) {
+        res.status(500).send();
+    });
+});
 
 db.sequelize.sync({force: false}).then(function() {
 
